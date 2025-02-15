@@ -1,8 +1,13 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'go_green.dart';
+import 'package:my_flame_game/munchylax.dart';
 
 void main() {
-  final game = GoGreen();
-  runApp(GameWidget(game: game));
+   runApp(
+    MaterialApp(
+      home: Scaffold(
+        body: GameWidget(game: Munchylax()),
+      ),
+    ),
+  );
 }
