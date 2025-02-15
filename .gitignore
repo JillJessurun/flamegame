@@ -1,0 +1,16 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.pub/
+build/
+
+# IntelliJ related
+.idea/
+
+# VS Code related
+.vscode/
+
+# macOS related
+.DS_Store
+
+# Windows related
+Thumbs.db
