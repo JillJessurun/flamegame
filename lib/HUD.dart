@@ -1,4 +1,5 @@
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:my_flame_game/munchylax.dart';
 import 'package:flame_audio/flame_audio.dart';
@@ -46,6 +47,7 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
         ..sprite = heartSprite
         ..size = Vector2(30, 30)
         ..position = Vector2(10 + i * 35, 10);
+      
       add(hearts[i]);
     }
 
@@ -58,13 +60,33 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
     scoreText.text = "Score: $score";
   }
 
-  // decrease health
   void decreaseHealth() {
     if (health > 1) {
       health--;
+
+      /*
+      // anchor the heart to its center
+      hearts[health].anchor = Anchor.center;
+
+      // adjust its position (move it by half its width/height)
+      hearts[health].position += hearts[health].size / 2;
+
+      // shrink the heart towards its center
+      if (health < hearts.length) {
+        final effect = ScaleEffect.to(
+          Vector2.zero(), // shrink to 0 (disappear)
+          EffectController(duration: 0.2),
+        );
+
+        hearts[health].add(effect);
+        
+        FlameAudio.play('hit.mp3', volume: 1);
+      }
+      */
+
       hearts[health].removeFromParent(); // remove a heart
       FlameAudio.play('hit.mp3', volume: 1);
-    }else{
+    } else {
       // game over
       gameRef.reset();
 
@@ -72,4 +94,5 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
       FlameAudio.play('gameover.mp3', volume: 1);
     }
   }
+
 }

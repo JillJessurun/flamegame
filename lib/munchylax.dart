@@ -1,3 +1,4 @@
+import 'package:flame/effects.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:my_flame_game/bomb.dart';
@@ -126,20 +127,40 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     return KeyEventResult.handled;
   }
 
-  void reset() {
+  void reset() async {
     // Stop the game
     isGameStarted = false;
 
     // Show the start overlay again
     overlays.add('Start'); 
 
-    // Reset score
+    // Reset scoreF
     hud.score = 0;
     hud.scoreText.text = "Score: ${hud.score}";
 
     // Reset health
     hud.health = 5; 
-    hud.hearts.forEach((heart) => add(heart)); // Add hearts back if removed
+    hud.hearts.forEach((heart) => add(heart)); // add hearts back if removed
+
+    /*
+    // Reset hearts
+    final heartSprite = await loadSprite('heart.png');
+    for (int i = 0; i < 5; i++) {
+      // Reset heart properties
+      hud.hearts[i]
+        ..sprite = heartSprite
+        ..size = Vector2(30, 30)
+        ..position = Vector2(10 + i * 35, 10);
+
+      // apply heart reseteffect
+      hud.hearts[i].anchor = Anchor.topLeft;
+      final resetEffect = ScaleEffect.to(Vector2(1, 1), EffectController(duration: 0.1));
+      hud.hearts[i].add(resetEffect);
+    
+      // add hearts to the HUD
+      hud.add(hud.hearts[i]);
+    }
+    */
 
     // Remove all food/bomb components
     children.whereType<Food>().forEach((food) => food.removeFromParent());
@@ -148,7 +169,7 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     // Reset player position
     player.position = Vector2(size.x / 2, size.y - positionThreshold);
 
-    // stop timers
+    // Stop timers
     spawnTimer.stop();
     bombTimer.stop();
 
@@ -156,4 +177,5 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     FlameAudio.bgm.stop();
     //FlameAudio.bgm.play('Cynthia theme.mp3', volume: 0.5);
   }
+
 }

@@ -1,4 +1,9 @@
+import 'dart:ui';
+
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flame/particles.dart';
+import 'package:flutter/material.dart';
 import 'package:my_flame_game/bomb.dart';
 import 'package:my_flame_game/munchylax.dart';
 import 'package:flutter/services.dart';
@@ -49,14 +54,20 @@ class Player extends SpriteComponent with HasGameRef<Munchylax>, CollisionCallba
       munchylaxInstance.player.position.x -= munchylaxInstance.speed; // left
       if (scale.x > 0) scale.x = -1; // Flip left
       isMoving = true;
+
+      // dust
+      spawnDustTrail(Vector2(position.x+30, position.y+(size.y/2)));
     }
     if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowRight) || munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyD)) {
       munchylaxInstance.player.position.x += munchylaxInstance.speed; // right
       if (scale.x < 0) scale.x = 1; // Flip right
       isMoving = true;
+
+      // dust
+      spawnDustTrail(Vector2(position.x-30, position.y+(size.y/2)));
     }
 
-    // bobbing effect when moving
+    // bobbing and dust effect when moving
     if (isMoving) {
       timeElapsed += dt * bobbingSpeed; // speed
       position.y += sin(timeElapsed) * bobbingHeight;
@@ -71,6 +82,17 @@ class Player extends SpriteComponent with HasGameRef<Munchylax>, CollisionCallba
     super.onCollisionStart(intersectionPoints, other);
 
     if (other is Food){
+      // eat particles
+      spawnFoodParticles(Vector2(80, 40)); // mouth position
+
+      // shake effect
+      final effect = MoveByEffect(
+        Vector2(10, 0), // move 10 pixels right
+        EffectController(duration: 0.05, reverseDuration: 0.05, repeatCount: 3),
+      );
+
+      add(effect);
+
       // eat
       gameRef.hud.updateScore(1);
       other.removeFromParent();
@@ -86,5 +108,66 @@ class Player extends SpriteComponent with HasGameRef<Munchylax>, CollisionCallba
       // explosion sound
       FlameAudio.play('explosion.mp3', volume: 1);
     }
+  }
+
+  void spawnFoodParticles(Vector2 position) {
+    final particle = ParticleSystemComponent(
+      position: position,
+      particle: Particle.generate(
+        count: 10, // Number of particles
+        lifespan: 0.5, // How long they last
+        generator: (i) => AcceleratedParticle(
+          acceleration: Vector2.random() * 100, // Random spread
+          speed: Vector2.random() * 70, // Random speed
+          child: CircleParticle(
+            radius: 1,
+            paint: Paint()..color = const Color.fromARGB(255, 194, 143, 4), // Sparkle color
+          ),
+        ),
+      ),
+    );
+
+    add(particle);
+  }
+
+  Future<void> spawnDustTrail(Vector2 position) async {
+    // Load the dust sprite (ensure this is loaded before using in the effect)
+    final dustSprite = await gameRef.loadSprite('dust.png');  // Replace with your dust image
+    
+    final dust = ParticleSystemComponent(
+      position: position, // Position of Munchylax
+      particle: Particle.generate(
+        count: 1, // Number of dust particles
+        lifespan: 0.05, // Duration before particles disappear
+        generator: (i) => MovingParticle(
+          to: Vector2(0, 0), // Moves upward (dust trail moves upward)
+          child: SpriteParticle(
+            sprite: dustSprite, // Use the loaded sprite
+            size: Vector2(50, 50), // Size of the dust particles
+          ),
+        ),
+      ),
+    );
+    gameRef.add(dust); // Add to the game
+  }
+
+  void spawnMissedFoodParticles(Vector2 position) {
+    final particle = ParticleSystemComponent(
+      position: position,
+      particle: Particle.generate(
+        count: 10, // Number of particles
+        lifespan: 0.5, // How long they last
+        generator: (i) => AcceleratedParticle(
+          acceleration: Vector2.random() * 100, // Random spread
+          speed: Vector2.random() * 70, // Random speed
+          child: CircleParticle(
+            radius: 2,
+            paint: Paint()..color = const Color.fromARGB(255, 255, 0, 0), // Sparkle color
+          ),
+        ),
+      ),
+    );
+
+    add(particle);
   }
 }

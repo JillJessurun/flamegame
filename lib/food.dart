@@ -46,10 +46,11 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
 
     // missed food
     if (position.y > gameRef.size.y) {
-      removeFromParent();
-      
       // remove 1 heart
       gameRef.hud.decreaseHealth();
+
+      // remove food
+      removeFromParent();
     }
   }
 }
