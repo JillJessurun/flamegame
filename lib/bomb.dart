@@ -4,13 +4,14 @@ import 'package:flame/collisions.dart';
 import 'dart:math';
 
 class Bomb extends SpriteComponent with HasGameRef<Munchylax> {
-  double fallSpeed = 10; // pixels per second
   final double bombSize = 50;
   final double min = 140;
   final double max = 210;
+  double fallSpeed = 10; // pixels per second
+
   static final Random _random = Random();
 
-  Bomb(){
+  Bomb() {
     final random = Random();
     fallSpeed = min + random.nextDouble() * (max - min);
   }
@@ -18,7 +19,9 @@ class Bomb extends SpriteComponent with HasGameRef<Munchylax> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    //debugMode = true;
+
+    // slowly increase difficulty
+    fallSpeed += gameRef.addSpeed;
 
     sprite = await gameRef.loadSprite('bomb.png');
 

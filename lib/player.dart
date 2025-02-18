@@ -21,23 +21,25 @@ class Player extends SpriteAnimationComponent
   final double playerSizeThreshold = 50;
   final double bobbingHeight = 3;
   final double bobbingSpeed = 50;
-  double timeElapsed = 0; // tracks time for sine wave
+  double timeElapsed = 0; // tracks time for sine wave (bobbing effect)
 
   //jump and frontflip
-  final double gravity = 2500; // positive value to simulate gravity
   final double jumpStrength = -900; // negative value for upward force
+  final double rotationSpeed = 5 * pi; // full frontflip
+  double gravity = 2500; // positive value to simulate gravity
   double velocityY = 0; // velocity of the player on the y-axis
   double rotationAngle = 0;
   bool isJumping = false;
   bool isFrontFlipping = false;
-  final double rotationSpeed = 5 * pi; // full frontflip
   bool changeFlipAround = false;
+  bool down = false;
 
   late SpriteAnimationComponent playerAnimation;
   late Munchylax munchylaxInstance;
   late SpriteAnimation idleAnimation;
   late SpriteAnimation walkAnimation;
 
+  // decorators for when taking damage
   final decoratorPlayerTrans = PaintDecorator.tint(
     Color.fromARGB(0, 255, 60, 0),
   );
@@ -45,6 +47,7 @@ class Player extends SpriteAnimationComponent
     Color.fromARGB(136, 255, 60, 0),
   );
 
+  // constructor
   Player(Vector2 position, Munchylax munchylax) {
     this.position = position;
     munchylaxInstance = munchylax;
@@ -67,9 +70,11 @@ class Player extends SpriteAnimationComponent
     // preload audio to avoid lag
     await FlameAudio.audioCache.load('eating.mp3');
     await FlameAudio.audioCache.load('explosion.mp3');
+    await FlameAudio.audioCache.load('jump.mp3');
+    await FlameAudio.audioCache.load('flip.mp3');
   }
 
-  // animations
+  // player animation
   Future<void> loadAnimations() async {
     // srcSize -> width is 188 pixels so then do 188 / 4 = 47 (four sprites in the sheet)
 
@@ -113,7 +118,11 @@ class Player extends SpriteAnimationComponent
       animation = idleAnimation;
 
       // apply gravity
-      velocityY += gravity * dt;
+      if (!down) {
+        velocityY += gravity * dt;
+      } else {
+        velocityY += gravity * dt * 2;
+      }
 
       // update vertical position
       position.y += velocityY * dt;
@@ -130,7 +139,6 @@ class Player extends SpriteAnimationComponent
     if (isFrontFlipping) {
       if (changeFlipAround) {
         // when moving left
-        // increment rotation angle
         rotationAngle -= rotationSpeed * dt; // 360-degree frontflip over time
 
         // limit rotation to one full frontflip
@@ -140,7 +148,6 @@ class Player extends SpriteAnimationComponent
         }
       } else {
         // when moving right
-        // increment rotation angle
         rotationAngle += rotationSpeed * dt; // 360-degree frontflip over time
 
         // limit rotation to one full frontflip
@@ -203,8 +210,18 @@ class Player extends SpriteAnimationComponent
     }
 
     // jump
-    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.space)) {
+    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.space) ||
+        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyW) ||
+        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
       jump();
+    }
+
+    // down
+    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyS) ||
+        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowDown)) {
+      down = true;
+    } else {
+      down = false;
     }
 
     // frontflip
@@ -219,9 +236,6 @@ class Player extends SpriteAnimationComponent
     } else {
       animation = idleAnimation;
     }
-
-    // clamp position so it doesn't go off-screen
-    //position.x = position.x.clamp(0 + playerSizeThreshold, (gameRef.size.x - width) + playerSizeThreshold);
 
     // warp to the other side
     if (position.x > gameRef.size.x) {
@@ -239,13 +253,14 @@ class Player extends SpriteAnimationComponent
   ) {
     super.onCollisionStart(intersectionPoints, other);
 
+    // collission with food
     if (other is Food) {
       // eat particles
       spawnFoodParticles(Vector2(10, 60)); // mouth position
 
       // shake effect
       final effect = MoveByEffect(
-        Vector2(10, 0), // move 10 pixels right
+        Vector2(10, 10), // move 10 pixels right
         EffectController(duration: 0.05, reverseDuration: 0.05, repeatCount: 3),
       );
 
@@ -268,26 +283,20 @@ class Player extends SpriteAnimationComponent
     }
   }
 
+  // food crumbs from players mouth
   void spawnFoodParticles(Vector2 position) {
     final particle = ParticleSystemComponent(
       position: position,
       particle: Particle.generate(
-        count: 20, // Number of particles
-        lifespan: 0.5, // How long they last
+        count: 20, // number of particles
+        lifespan: 0.5, // how long they last
         generator:
             (i) => AcceleratedParticle(
-              acceleration: Vector2(-40, 200), // Random spread
-              speed: Vector2.random() * 100, // Random speed
+              acceleration: Vector2(-40, 200),
+              speed: Vector2.random() * 100,
               child: CircleParticle(
                 radius: 2,
-                paint:
-                    Paint()
-                      ..color = const Color.fromARGB(
-                        255,
-                        194,
-                        143,
-                        4,
-                      ), // Sparkle color
+                paint: Paint()..color = const Color.fromARGB(255, 194, 143, 4),
               ),
             ),
       ),
@@ -296,76 +305,43 @@ class Player extends SpriteAnimationComponent
     add(particle);
   }
 
+  // dust trail when walking
   Future<void> spawnDustTrail(Vector2 position) async {
-    // Load the dust sprite (ensure this is loaded before using in the effect)
-    final dustSprite = await gameRef.loadSprite(
-      'dust.png',
-    ); // Replace with your dust image
+    final dustSprite = await gameRef.loadSprite('dust.png');
 
     final dust = ParticleSystemComponent(
-      position: position, // Position of Munchylax
-      particle: Particle.generate(
-        count: 1, // Number of dust particles
-        lifespan: 0.05, // Duration before particles disappear
-        generator:
-            (i) => MovingParticle(
-              to: Vector2(0, 0), // Moves upward (dust trail moves upward)
-              child: SpriteParticle(
-                sprite: dustSprite, // Use the loaded sprite
-                size: Vector2(50, 50), // Size of the dust particles
-              ),
-            ),
-      ),
-    );
-    gameRef.add(dust); // Add to the game
-  }
-
-  void spawnMissedFoodParticles(Vector2 position) {
-    final particle = ParticleSystemComponent(
       position: position,
       particle: Particle.generate(
-        count: 10, // Number of particles
-        lifespan: 0.5, // How long they last
+        count: 1,
+        lifespan: 0.05,
         generator:
-            (i) => AcceleratedParticle(
-              acceleration: Vector2.random() * 100, // Random spread
-              speed: Vector2.random() * 70, // Random speed
-              child: CircleParticle(
-                radius: 2,
-                paint:
-                    Paint()
-                      ..color = const Color.fromARGB(
-                        255,
-                        255,
-                        0,
-                        0,
-                      ), // Sparkle color
-              ),
+            (i) => MovingParticle(
+              to: Vector2(0, 0),
+              child: SpriteParticle(sprite: dustSprite, size: Vector2(50, 50)),
             ),
       ),
     );
-
-    add(particle);
+    gameRef.add(dust);
   }
 
-  // Function to trigger a jump
+  // jump function
   void jump() {
     if (!isJumping) {
       isJumping = true;
-      velocityY = jumpStrength; // Set initial jump velocity
+      velocityY = jumpStrength;
 
       // jump sound
       FlameAudio.play('jump.mp3', volume: 1);
     }
   }
 
-  // Function to trigger a frontflip
+  // frontflip function
   void frontflip() {
     if (isJumping && !isFrontFlipping) {
       isFrontFlipping = true;
-      rotationAngle = 0; // reset rotation angle at the start of frontflip
+      rotationAngle = 0;
 
-      // jump sound
+      // flip sound
       FlameAudio.play('flip.mp3', volume: 1);
     }
   }

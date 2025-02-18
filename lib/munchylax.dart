@@ -11,13 +11,13 @@ import 'package:flame_audio/flame_audio.dart';
 
 class Munchylax extends FlameGame
     with KeyboardEvents, HasCollisionDetection, TapDetector {
-  // variables
   final double speed = 15;
   final double positionThreshold = 55;
   final double groundHeight = 25;
   final double fallingFoodAmount = 1.2; // the higher the less food
   final double fallingBombAmount = 3; // the higher the less bomb
   bool isGameStarted = false; // start in a paused state
+  double addSpeed = 0;
 
   late Timer spawnTimer;
   late Timer bombTimer;
@@ -67,6 +67,7 @@ class Munchylax extends FlameGame
       fallingFoodAmount,
       repeat: true,
       onTick: () {
+        addSpeed += 3; // make food fall faster each time
         add(Food()); // new food
       },
     );
@@ -85,7 +86,7 @@ class Munchylax extends FlameGame
 
   void startGame() {
     isGameStarted = true;
-    overlays.remove('Start'); // Remove the overlay text
+    overlays.remove('Start'); // remove the overlay text
     FlameAudio.bgm.play('Cynthia theme.mp3', volume: 0.5);
   }
 
@@ -140,55 +141,37 @@ class Munchylax extends FlameGame
   }
 
   void reset() async {
-    // Stop the game
+    // stop the game
     isGameStarted = false;
 
-    // Show the start overlay again
+    // show the start overlay again
     overlays.add('Start');
 
-    // Reset scoreF
+    // reset score
     hud.score = 0;
     hud.scoreText.text = "Score: ${hud.score}";
 
-    // Reset health
+    // reset health
     hud.health = 5;
     for (var heart in hud.hearts) {
       add(heart);
     } // add hearts back if removed
 
-    /*
-    // Reset hearts
-    final heartSprite = await loadSprite('heart.png');
-    for (int i = 0; i < 5; i++) {
-      // Reset heart properties
-      hud.hearts[i]
-        ..sprite = heartSprite
-        ..size = Vector2(30, 30)
-        ..position = Vector2(10 + i * 35, 10);
+    // reset food/bomb speed
+    addSpeed = 0;
 
-      // apply heart reseteffect
-      hud.hearts[i].anchor = Anchor.topLeft;
-      final resetEffect = ScaleEffect.to(Vector2(1, 1), EffectController(duration: 0.1));
-      hud.hearts[i].add(resetEffect);
-    
-      // add hearts to the HUD
-      hud.add(hud.hearts[i]);
-    }
-    */
-
-    // Remove all food/bomb components
+    // remove all food/bomb components
     children.whereType<Food>().forEach((food) => food.removeFromParent());
     children.whereType<Bomb>().forEach((bomb) => bomb.removeFromParent());
 
-    // Reset player position
+    // reset player position
     player.position = Vector2(size.x / 2, size.y - positionThreshold);
 
-    // Stop timers
+    // stop timers
     spawnTimer.stop();
     bombTimer.stop();
 
-    // Stop & restart background music
+    // stop background music
     FlameAudio.bgm.stop();
-    //FlameAudio.bgm.play('Cynthia theme.mp3', volume: 0.5);
   }
 }

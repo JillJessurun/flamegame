@@ -5,10 +5,11 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flame/text.dart';
 
 class HUD extends PositionComponent with HasGameRef<Munchylax> {
-  late TextComponent scoreText;
-  late List<SpriteComponent> hearts;
   int score = 0;
   int health = 5; // 5 hearts for full health
+
+  late TextComponent scoreText;
+  late List<SpriteComponent> hearts;
 
   HUD() {
     // textpaint to configure text appearance
@@ -59,11 +60,12 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
     scoreText.text = "Score: $score";
   }
 
+  // decrease health function
   void decreaseHealth() {
     if (health > 1) {
       health--;
 
-      // change decorator
+      // change decorator to show damage
       gameRef.player.decorator.removeLast();
       gameRef.player.decorator.addLast(gameRef.player.decoratorPlayerRed);
 

@@ -12,13 +12,12 @@ void main() {
         'Start':
             (context, game) => StartTextOverlay(
               onStart: () {
-                // Cast game to Munchylax to access 'overlays'
                 (game as Munchylax).overlays.remove('Start');
                 game.startGame();
               },
             ),
       },
-      initialActiveOverlays: const ['Start'], // Show text initially
+      initialActiveOverlays: const ['Start'],
     ),
   );
 }
@@ -39,34 +38,17 @@ class StartTextOverlay extends StatelessWidget {
           ),
         ),
         Align(
-          alignment:
-              Alignment
-                  .centerLeft, // Aligns to the left but still vertically centered
+          alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.only(
-              left: 250,
-            ), // Moves it a bit to the right
+            padding: const EdgeInsets.only(left: 250),
             child: ElevatedButton(
               onPressed: onStart,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(
-                  0,
-                  0,
-                  0,
-                  0,
-                ), // Change button color
-                foregroundColor: const Color.fromARGB(
-                  255,
-                  255,
-                  255,
-                  255,
-                ), // Change text color
-                padding: EdgeInsets.symmetric(
-                  horizontal: 64,
-                  vertical: 32,
-                ), // Adjust padding
+                backgroundColor: const Color.fromARGB(0, 0, 0, 0),
+                foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+                padding: EdgeInsets.symmetric(horizontal: 64, vertical: 32),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // Round the corners
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
@@ -100,7 +82,7 @@ class StartTextOverlay extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(top: 400, left: 278),
             child: Text(
-              "GAME CONTROLS\n\nLeft = A\nRight = D\nJump = SPACE\nFlip = Enter",
+              "GAME CONTROLS\n\n\t\tJump = W\n\t\tLeft = A\n\t\tDown = S\n\t\tRight = D\n\t\tFlip = Enter",
               style: TextStyle(
                 fontSize: 18,
                 fontFamily: 'pokemon',

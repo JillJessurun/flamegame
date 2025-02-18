@@ -4,10 +4,11 @@ import 'package:flame/collisions.dart';
 import 'dart:math';
 
 class Food extends SpriteComponent with HasGameRef<Munchylax> {
-  double fallSpeed = 10; // pixels per second
   final double foodSize = 40;
   final double min = 140;
   final double max = 210;
+  double fallSpeed = 10; // pixels per second
+
   static final Random _random = Random();
 
   Food() {
@@ -18,12 +19,11 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    //debugMode = true;
+
+    // slowly increase difficulty
+    fallSpeed += gameRef.addSpeed;
 
     sprite = await gameRef.loadSprite('hotdog.png');
-
-    // initialize within onLoad function instead of constructor because
-    // gameRef must be used to get the width of the screen
 
     // set random x position
     position = Vector2(
