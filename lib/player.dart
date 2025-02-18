@@ -7,6 +7,7 @@ import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 import 'package:my_flame_game/bomb.dart';
+import 'package:my_flame_game/bonus.dart';
 import 'package:my_flame_game/munchylax.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/collisions.dart';
@@ -72,6 +73,7 @@ class Player extends SpriteAnimationComponent
     await FlameAudio.audioCache.load('explosion.mp3');
     await FlameAudio.audioCache.load('jump.mp3');
     await FlameAudio.audioCache.load('flip.mp3');
+    await FlameAudio.audioCache.load('beep.mp3');
   }
 
   // player animation
@@ -280,6 +282,20 @@ class Player extends SpriteAnimationComponent
 
       // explosion sound
       FlameAudio.play('explosion.mp3', volume: 1);
+    }
+
+    if (other is Bonus) {
+      if (isFrontFlipping) {
+        // 5 bonus points
+        gameRef.hud.updateScore(5);
+        other.removeFromParent();
+
+        // eat sound
+        FlameAudio.play('eating.mp3', volume: 1);
+      } else {
+        // beep sound
+        FlameAudio.play('beep.mp3', volume: 1);
+      }
     }
   }
 

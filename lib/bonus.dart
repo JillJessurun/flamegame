@@ -1,0 +1,43 @@
+import 'package:flame/components.dart';
+import 'package:my_flame_game/munchylax.dart';
+import 'package:flame/collisions.dart';
+import 'package:flame/effects.dart';
+import 'dart:math';
+
+class Bonus extends SpriteComponent with HasGameRef<Munchylax> {
+  final double foodSize = 40;
+  final double min = 140;
+  final double max = 210;
+  double spawnHeight = 0;
+
+  static final Random _random = Random();
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+
+    sprite = await gameRef.loadSprite('donut.png');
+
+    // set spawn height for the bonus food 1.7 times the player height
+    spawnHeight = gameRef.size.y - (gameRef.player.size.y * 1.7);
+
+    // set random x position
+    position = Vector2(
+      _random.nextDouble() * gameRef.size.x - foodSize,
+      spawnHeight,
+    );
+
+    size = Vector2(foodSize, foodSize);
+
+    // move effect
+    final effect = MoveByEffect(
+      Vector2(0, -20),
+      EffectController(duration: 0.5, reverseDuration: 0.5, infinite: true),
+    );
+
+    add(effect);
+
+    // collision hitbox
+    add(CircleHitbox());
+  }
+}
