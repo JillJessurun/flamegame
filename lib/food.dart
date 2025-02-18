@@ -10,7 +10,7 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
   final double max = 210;
   static final Random _random = Random();
 
-  Food(){
+  Food() {
     final random = Random();
     fallSpeed = min + random.nextDouble() * (max - min);
   }
@@ -48,16 +48,6 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
     if (position.y > gameRef.size.y) {
       // remove 1 heart
       gameRef.hud.decreaseHealth();
-
-      // change decorator
-      gameRef.player.decorator.removeLast();
-      gameRef.player.decorator.addLast(gameRef.player.decoratorPlayerRed);
-
-      // wait before changing back
-      Future.delayed(Duration(milliseconds: 100), () {
-        gameRef.player.decorator.removeLast();
-        gameRef.player.decorator.addLast(gameRef.player.decoratorPlayerTrans);
-      });
 
       // remove food
       removeFromParent();

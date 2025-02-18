@@ -9,7 +9,8 @@ import 'package:my_flame_game/food.dart';
 import 'package:my_flame_game/hud.dart';
 import 'package:flame_audio/flame_audio.dart';
 
-class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, TapDetector {
+class Munchylax extends FlameGame
+    with KeyboardEvents, HasCollisionDetection, TapDetector {
   // variables
   final double speed = 15;
   final double positionThreshold = 55;
@@ -23,7 +24,7 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
   late SpriteComponent background;
   late Player player;
   late HUD hud;
-  Set<LogicalKeyboardKey> keysPressed = {};  // track keys that are pressed
+  Set<LogicalKeyboardKey> keysPressed = {}; // track keys that are pressed
 
   @override
   Future<void> onLoad() async {
@@ -33,10 +34,11 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     await FlameAudio.audioCache.load('Cynthia theme.mp3');
 
     // load background image
-    background = SpriteComponent()
-      ..sprite = await loadSprite('backgroundmunchylax.jpg')
-      ..size = size
-      ..position = Vector2.zero();
+    background =
+        SpriteComponent()
+          ..sprite = await loadSprite('backgroundmunchylax.jpg')
+          ..size = size
+          ..position = Vector2.zero();
 
     add(background);
 
@@ -61,15 +63,23 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     add(player);
 
     // load food spawning timer
-    spawnTimer = Timer(fallingFoodAmount, repeat: true, onTick: () {
-      add(Food()); // new food
-    });
+    spawnTimer = Timer(
+      fallingFoodAmount,
+      repeat: true,
+      onTick: () {
+        add(Food()); // new food
+      },
+    );
     spawnTimer.start();
 
     // load bomb spawning timer
-    bombTimer = Timer(fallingBombAmount, repeat: true, onTick: () {
-      add(Bomb()); // new bomb
-    });
+    bombTimer = Timer(
+      fallingBombAmount,
+      repeat: true,
+      onTick: () {
+        add(Bomb()); // new bomb
+      },
+    );
     bombTimer.start();
   }
 
@@ -94,27 +104,30 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     super.update(dt);
 
     //update food timer
-    if (!spawnTimer.isRunning()){
+    if (!spawnTimer.isRunning()) {
       spawnTimer.start();
-    }else{
+    } else {
       spawnTimer.update(dt);
     }
 
     //update bomb timer
-    if (!bombTimer.isRunning()){
+    if (!bombTimer.isRunning()) {
       bombTimer.start();
-    }else{
+    } else {
       bombTimer.update(dt);
     }
   }
 
   @override
-  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+  KeyEventResult onKeyEvent(
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.escape) {
         reset(); // homescreen when "R" is pressed
         return KeyEventResult.handled;
-      }else{
+      } else {
         // add the key that was pressed
         this.keysPressed.add(event.logicalKey);
       }
@@ -131,14 +144,14 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     isGameStarted = false;
 
     // Show the start overlay again
-    overlays.add('Start'); 
+    overlays.add('Start');
 
     // Reset scoreF
     hud.score = 0;
     hud.scoreText.text = "Score: ${hud.score}";
 
     // Reset health
-    hud.health = 5; 
+    hud.health = 5;
     for (var heart in hud.hearts) {
       add(heart);
     } // add hearts back if removed
@@ -178,5 +191,4 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
     FlameAudio.bgm.stop();
     //FlameAudio.bgm.play('Cynthia theme.mp3', volume: 0.5);
   }
-
 }
