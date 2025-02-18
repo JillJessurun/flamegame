@@ -1,4 +1,3 @@
-import 'package:flame/effects.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:my_flame_game/bomb.dart';
@@ -140,7 +139,9 @@ class Munchylax extends FlameGame with KeyboardEvents, HasCollisionDetection, Ta
 
     // Reset health
     hud.health = 5; 
-    hud.hearts.forEach((heart) => add(heart)); // add hearts back if removed
+    for (var heart in hud.hearts) {
+      add(heart);
+    } // add hearts back if removed
 
     /*
     // Reset hearts

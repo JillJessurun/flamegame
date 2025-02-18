@@ -1,5 +1,4 @@
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:my_flame_game/munchylax.dart';
 import 'package:flame_audio/flame_audio.dart';
