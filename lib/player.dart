@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/particles.dart';
+import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 import 'package:my_flame_game/bomb.dart';
@@ -26,6 +27,9 @@ class Player extends SpriteAnimationComponent with HasGameRef<Munchylax>, Collis
   late SpriteAnimation idleAnimation;
   late SpriteAnimation walkAnimation;
 
+  final decoratorPlayerTrans = PaintDecorator.tint(Color.fromARGB(0, 255, 60, 0));
+  final decoratorPlayerRed = PaintDecorator.tint(Color.fromARGB(136, 255, 60, 0));
+
   Player(Vector2 position, Munchylax munchylax) {
     this.position = position;
     munchylaxInstance = munchylax;
@@ -38,7 +42,10 @@ class Player extends SpriteAnimationComponent with HasGameRef<Munchylax>, Collis
   Future<void> onLoad() async {
     super.onLoad();
 
-    //sprite animation setup
+    // decorator
+    decorator.addLast(decoratorPlayerTrans);
+
+    // sprite animation setup
     size = Vector2(47.0 * 2.5, 60.0 * 2.5);
     await loadAnimations();
 
@@ -121,7 +128,7 @@ class Player extends SpriteAnimationComponent with HasGameRef<Munchylax>, Collis
       // eat
       gameRef.hud.updateScore(1);
       other.removeFromParent();
-
+      
       // eat sound
       FlameAudio.play('eating.mp3', volume: 1);
     }

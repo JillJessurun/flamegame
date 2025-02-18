@@ -49,6 +49,16 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
       // remove 1 heart
       gameRef.hud.decreaseHealth();
 
+      // change decorator
+      gameRef.player.decorator.removeLast();
+      gameRef.player.decorator.addLast(gameRef.player.decoratorPlayerRed);
+
+      // wait before changing back
+      Future.delayed(Duration(milliseconds: 100), () {
+        gameRef.player.decorator.removeLast();
+        gameRef.player.decorator.addLast(gameRef.player.decoratorPlayerTrans);
+      });
+
       // remove food
       removeFromParent();
     }
