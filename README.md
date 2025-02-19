@@ -1,16 +1,13 @@
-# my_flame_game
+# Munchylax
 
-A new Flutter project.
+A fun 2D game where Munchlax must eat falling food and avoid bombs!
+Frontflip through donuts and catch the hotdogs!
+Don't drop anything!
 
-## Getting Started
+Try the game!: https://jilljessurun.github.io/flamegame/
 
-This project is a starting point for a Flutter application.
+Music:
 
-A few resources to get you started if this is your first Flutter project:
+Pokémon Diamond, Pearl & Platinum - Champion Cynthia Battle Music (HQ)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+https://www.youtube.com/watch?v=rXefFHRgyE0&t=35s
