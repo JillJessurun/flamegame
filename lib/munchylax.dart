@@ -133,7 +133,10 @@ class Munchylax extends FlameGame
   void startGame() {
     isGameStarted = true;
     overlays.remove('Start'); // remove the overlay text
-    FlameAudio.bgm.play('Cynthia theme.mp3', volume: 0.5);
+
+    // audio
+    //FlameAudio.bgm.initialize();
+    //FlameAudio.bgm.play('Cynthia theme.mp3', volume: 0.5);
   }
 
   @override

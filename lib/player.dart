@@ -1,18 +1,17 @@
 import 'dart:ui';
-
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
+import 'package:my_flame_game/audio.dart';
 import 'package:my_flame_game/bomb.dart';
 import 'package:my_flame_game/bonus.dart';
 import 'package:my_flame_game/munchylax.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/collisions.dart';
 import 'package:my_flame_game/food.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'dart:math';
 
 class Player extends SpriteAnimationComponent
@@ -34,6 +33,15 @@ class Player extends SpriteAnimationComponent
   bool isFrontFlipping = false;
   bool changeFlipAround = false;
   bool down = false;
+
+  // audio effects
+  late Audio eatingAudio;
+  late Audio explosionAudio;
+  late Audio flipAudio;
+  late Audio hitAudio;
+  late Audio jumpAudio;
+  late Audio beepAudio;
+  late Audio bonusAudio;
 
   late SpriteAnimationComponent playerAnimation;
   late Munchylax munchylaxInstance;
@@ -68,12 +76,14 @@ class Player extends SpriteAnimationComponent
     size = Vector2(47.0 * 2.5, 60.0 * 2.5);
     await loadAnimations();
 
-    // preload audio to avoid lag
-    await FlameAudio.audioCache.load('eating.mp3');
-    await FlameAudio.audioCache.load('explosion.mp3');
-    await FlameAudio.audioCache.load('jump.mp3');
-    await FlameAudio.audioCache.load('flip.mp3');
-    await FlameAudio.audioCache.load('beep.mp3');
+    // audio instances
+    eatingAudio = Audio('eating.wav');
+    explosionAudio = Audio('explosion.wav');
+    jumpAudio = Audio('jump.wav');
+    flipAudio = Audio('flip.wav');
+    beepAudio = Audio('beep.wav');
+    bonusAudio = Audio('eating.wav');
+    hitAudio = Audio('hit.mp3');
   }
 
   // player animation
@@ -273,7 +283,7 @@ class Player extends SpriteAnimationComponent
       other.removeFromParent();
 
       // eat sound
-      FlameAudio.play('eating.mp3', volume: 1);
+      eatingAudio.playSound();
     }
 
     if (other is Bomb) {
@@ -281,7 +291,7 @@ class Player extends SpriteAnimationComponent
       gameRef.reset();
 
       // explosion sound
-      FlameAudio.play('explosion.mp3', volume: 1);
+      explosionAudio.playSound();
     }
 
     if (other is Bonus) {
@@ -291,10 +301,10 @@ class Player extends SpriteAnimationComponent
         other.removeFromParent();
 
         // eat sound
-        FlameAudio.play('eating.mp3', volume: 1);
+        bonusAudio.playSound();
       } else {
         // beep sound
-        FlameAudio.play('beep.mp3', volume: 1);
+        beepAudio.playSound();
       }
     }
   }
@@ -347,7 +357,7 @@ class Player extends SpriteAnimationComponent
       velocityY = jumpStrength;
 
       // jump sound
-      FlameAudio.play('jump.mp3', volume: 1);
+      jumpAudio.playSound();
     }
   }
 
@@ -358,7 +368,7 @@ class Player extends SpriteAnimationComponent
       rotationAngle = 0;
 
       // flip sound
-      FlameAudio.play('flip.mp3', volume: 1);
+      flipAudio.playSound();
     }
   }
 }

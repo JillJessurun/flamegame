@@ -76,7 +76,7 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
       });
 
       hearts[health].removeFromParent(); // remove a heart
-      FlameAudio.play('hit.mp3', volume: 1);
+      gameRef.player.hitAudio.playSound();
     } else {
       // game over
       gameRef.reset();
