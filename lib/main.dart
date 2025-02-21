@@ -1,98 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flame/game.dart';
-import 'munchylax.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_flame_game/bloc/app_bloc.dart';
+import 'package:my_flame_game/bloc/bloc_states.dart';
+import 'package:my_flame_game/pages/game_page.dart';
+import 'package:my_flame_game/pages/menu_page.dart';
 
 void main() {
-  final game = Munchylax();
-
-  runApp(
-    GameWidget(
-      game: game,
-      overlayBuilderMap: {
-        'Start':
-            (context, game) => StartTextOverlay(
-              onStart: () {
-                (game as Munchylax).overlays.remove('Start');
-                game.startGame();
-              },
-            ),
-      },
-      initialActiveOverlays: const ['Start'],
-    ),
-  );
+  runApp(const App());
 }
 
-class StartTextOverlay extends StatelessWidget {
-  final VoidCallback onStart;
-
-  const StartTextOverlay({super.key, required this.onStart});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/backgroundhome.jpg',
-            fit: BoxFit.cover,
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 250),
-            child: ElevatedButton(
-              onPressed: onStart,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(0, 0, 0, 0),
-                foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-                padding: EdgeInsets.symmetric(horizontal: 64, vertical: 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                "Start",
-                style: TextStyle(
-                  fontSize: 36,
-                  fontFamily: 'pokemon',
-                  letterSpacing: 7.0,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 350, left: 150),
-            child: Text(
-              "Munchylax",
-              style: TextStyle(
-                fontSize: 80,
-                fontFamily: 'pokemon',
-                letterSpacing: 7.0,
-                color: Color.fromARGB(255, 255, 254, 223),
-              ),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 400, left: 278),
-            child: Text(
-              "GAME CONTROLS\n\n\t\tJump = W\n\t\tLeft = A\n\t\tDown = S\n\t\tRight = D\n\t\tFlip = Enter",
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: 'pokemon',
-                letterSpacing: 5.0,
-                color: Color.fromARGB(255, 255, 254, 223),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return MultiBlocProvider(
+      providers: [BlocProvider(create: (context) => AppBloc())],
+      child: BlocBuilder<AppBloc, BlocStates>(
+        builder: (context, state) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Munchylax',
+            home: state is Game ? const GamePage() : const MenuPage(),
+          );
+        },
+      ),
     );
   }
 }

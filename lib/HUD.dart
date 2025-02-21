@@ -1,5 +1,8 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_flame_game/bloc/app_bloc.dart';
+import 'package:my_flame_game/bloc/bloc_events.dart';
 import 'package:my_flame_game/munchylax.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame/text.dart';
@@ -79,7 +82,7 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
       gameRef.player.hitAudio.playSound();
     } else {
       // game over
-      gameRef.reset();
+      gameRef.context.read<AppBloc>().add(GoToMenu());
 
       // sound
       FlameAudio.play('gameover.mp3', volume: 1);

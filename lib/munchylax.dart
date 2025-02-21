@@ -1,6 +1,9 @@
 import 'package:flame/effects.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_flame_game/bloc/app_bloc.dart';
+import 'package:my_flame_game/bloc/bloc_events.dart';
 import 'package:my_flame_game/bomb.dart';
 import 'package:my_flame_game/bonus.dart';
 import 'package:my_flame_game/player.dart';
@@ -19,6 +22,7 @@ class Munchylax extends FlameGame
   final double fallingFoodAmount = 1.2; // the higher the less food
   final double fallingBombAmount = 3; // the higher the less bomb
   final double bonusFoodAmount = 5; // the higher the less bonus food
+  late final BuildContext context;
   bool isGameStarted = false; // start in a paused state
   double addSpeed = 0;
   Bonus? currentBonus;
@@ -39,6 +43,8 @@ class Munchylax extends FlameGame
   late HUD hud;
   Set<LogicalKeyboardKey> keysPressed = {}; // track keys that are pressed
 
+  Munchylax(this.context);
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -54,9 +60,6 @@ class Munchylax extends FlameGame
           ..position = Vector2.zero();
 
     add(background);
-
-    // show the start button overlay
-    overlays.add('Start');
 
     // load ground
     RectangleComponent ground = RectangleComponent(
@@ -132,7 +135,6 @@ class Munchylax extends FlameGame
 
   void startGame() {
     isGameStarted = true;
-    overlays.remove('Start'); // remove the overlay text
 
     // audio
     FlameAudio.bgm.initialize();
@@ -201,7 +203,7 @@ class Munchylax extends FlameGame
   ) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.escape) {
-        reset(); // homescreen when "R" is pressed
+        context.read<AppBloc>().add(GoToMenu());
         return KeyEventResult.handled;
       } else {
         // add the key that was pressed
@@ -213,47 +215,5 @@ class Munchylax extends FlameGame
     }
 
     return KeyEventResult.handled;
-  }
-
-  void reset() async {
-    // stop the game
-    isGameStarted = false;
-
-    // show the start overlay again
-    overlays.add('Start');
-
-    // new fade
-    fading = true;
-    alpha = 1;
-    elapsedTime = 0;
-
-    // reset score
-    hud.score = 0;
-    hud.scoreText.text = "Score: ${hud.score}";
-
-    // reset health
-    hud.health = 5;
-    for (var heart in hud.hearts) {
-      add(heart);
-    } // add hearts back if removed
-
-    // reset food/bomb speed
-    addSpeed = 0;
-
-    // remove all food/bomb components
-    children.whereType<Food>().forEach((food) => food.removeFromParent());
-    children.whereType<Bonus>().forEach((bonus) => bonus.removeFromParent());
-    children.whereType<Bomb>().forEach((bomb) => bomb.removeFromParent());
-
-    // reset player position
-    player.position = Vector2(size.x / 2, size.y - positionThreshold);
-
-    // stop timers
-    spawnTimer.stop();
-    bombTimer.stop();
-    bonusTimer.stop();
-
-    // stop background music
-    FlameAudio.bgm.stop();
   }
 }

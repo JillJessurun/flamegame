@@ -5,7 +5,10 @@ import 'package:flame/particles.dart';
 import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_flame_game/audio.dart';
+import 'package:my_flame_game/bloc/app_bloc.dart';
+import 'package:my_flame_game/bloc/bloc_events.dart';
 import 'package:my_flame_game/bomb.dart';
 import 'package:my_flame_game/bonus.dart';
 import 'package:my_flame_game/munchylax.dart';
@@ -288,7 +291,7 @@ class Player extends SpriteAnimationComponent
 
     if (other is Bomb) {
       // game over
-      gameRef.reset();
+      gameRef.context.read<AppBloc>().add(GoToMenu());
 
       // explosion sound
       explosionAudio.playSound();
