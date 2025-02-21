@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_flame_game/bloc/app_bloc.dart';
 import 'package:my_flame_game/bloc/bloc_events.dart';
-import 'package:my_flame_game/munchylax.dart';
+import 'package:my_flame_game/game_class/munchylax.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});

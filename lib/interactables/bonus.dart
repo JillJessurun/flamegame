@@ -1,5 +1,5 @@
 import 'package:flame/components.dart';
-import 'package:my_flame_game/munchylax.dart';
+import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/effects.dart';
 import 'dart:math';

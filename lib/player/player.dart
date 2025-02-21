@@ -6,16 +6,27 @@ import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_flame_game/audio.dart';
+import 'package:my_flame_game/audio/audio.dart';
 import 'package:my_flame_game/bloc/app_bloc.dart';
 import 'package:my_flame_game/bloc/bloc_events.dart';
-import 'package:my_flame_game/bomb.dart';
-import 'package:my_flame_game/bonus.dart';
-import 'package:my_flame_game/munchylax.dart';
+import 'package:my_flame_game/interactables/bomb.dart';
+import 'package:my_flame_game/interactables/bonus.dart';
+import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/collisions.dart';
-import 'package:my_flame_game/food.dart';
+import 'package:my_flame_game/interactables/food.dart';
 import 'dart:math';
+
+import 'package:my_flame_game/player_states/player_state_manager.dart';
+
+enum PlayerStateType {
+  isJumping,
+  isFrontFlipping,
+  isGoingDown,
+  isIdle,
+  isRunningLeft,
+  isRunningRight,
+}
 
 class Player extends SpriteAnimationComponent
     with HasGameRef<Munchylax>, CollisionCallbacks {
@@ -32,10 +43,14 @@ class Player extends SpriteAnimationComponent
   double gravity = 2500; // positive value to simulate gravity
   double velocityY = 0; // velocity of the player on the y-axis
   double rotationAngle = 0;
+  bool changeFlipAround = false;
+
+  // player states
   bool isJumping = false;
   bool isFrontFlipping = false;
-  bool changeFlipAround = false;
-  bool down = false;
+  bool isGoingDown = false;
+  bool isRunning = false;
+  bool isIdle = false;
 
   // audio effects
   late Audio eatingAudio;
@@ -50,6 +65,7 @@ class Player extends SpriteAnimationComponent
   late Munchylax munchylaxInstance;
   late SpriteAnimation idleAnimation;
   late SpriteAnimation walkAnimation;
+  late PlayerStateManager playerStateManager;
 
   // decorators for when taking damage
   final decoratorPlayerTrans = PaintDecorator.tint(
@@ -62,6 +78,7 @@ class Player extends SpriteAnimationComponent
   // constructor
   Player(Vector2 position, Munchylax munchylax) {
     this.position = position;
+    playerStateManager = PlayerStateManager();
     munchylaxInstance = munchylax;
     size = Vector2(playerWidth, playerHeight);
     anchor = Anchor.center;
@@ -125,18 +142,23 @@ class Player extends SpriteAnimationComponent
   void update(double dt) {
     super.update(dt);
 
-    bool isMoving = false;
+    // player state manager
+    playerStateManager.updateAllStates(gameRef);
+    playerStateManager.removeState(PlayerStateType.isRunningLeft, gameRef);
+    playerStateManager.removeState(PlayerStateType.isRunningRight, gameRef);
 
     // jump physics
-    if (isJumping) {
+    if (playerStateManager.activeStates.contains(PlayerStateType.isJumping)) {
       // change to idle
       animation = idleAnimation;
 
       // apply gravity
-      if (!down) {
-        velocityY += gravity * dt;
-      } else {
+      if (playerStateManager.activeStates.contains(
+        PlayerStateType.isGoingDown,
+      )) {
         velocityY += gravity * dt * 2;
+      } else {
+        velocityY += gravity * dt;
       }
 
       // update vertical position
@@ -145,13 +167,22 @@ class Player extends SpriteAnimationComponent
       // prevent the player from falling through the ground
       if (position.y >= gameRef.size.y - (playerHeight / 2)) {
         position.y = gameRef.size.y - (playerHeight / 2); // reset to ground
-        isJumping = false;
         velocityY = 0; // stop downward velocity
+
+        // remove states from list
+        playerStateManager.removeState(PlayerStateType.isJumping, gameRef);
+        if (playerStateManager.activeStates.contains(
+          PlayerStateType.isGoingDown,
+        )) {
+          playerStateManager.removeState(PlayerStateType.isGoingDown, gameRef);
+        }
       }
     }
 
     // frontflip physics
-    if (isFrontFlipping) {
+    if (playerStateManager.activeStates.contains(
+      PlayerStateType.isFrontFlipping,
+    )) {
       if (changeFlipAround) {
         // when moving left
         rotationAngle -= rotationSpeed * dt; // 360-degree frontflip over time
@@ -159,7 +190,16 @@ class Player extends SpriteAnimationComponent
         // limit rotation to one full frontflip
         if (rotationAngle <= -2 * pi) {
           rotationAngle = 0;
-          isFrontFlipping = false; // end frontflip
+
+          // remove states from list
+          if (playerStateManager.activeStates.contains(
+            PlayerStateType.isFrontFlipping,
+          )) {
+            playerStateManager.removeState(
+              PlayerStateType.isFrontFlipping,
+              gameRef,
+            );
+          }
         }
       } else {
         // when moving right
@@ -168,7 +208,16 @@ class Player extends SpriteAnimationComponent
         // limit rotation to one full frontflip
         if (rotationAngle >= 2 * pi) {
           rotationAngle = 0;
-          isFrontFlipping = false; // end frontflip
+
+          // remove states from list
+          if (playerStateManager.activeStates.contains(
+            PlayerStateType.isFrontFlipping,
+          )) {
+            playerStateManager.removeState(
+              PlayerStateType.isFrontFlipping,
+              gameRef,
+            );
+          }
         }
       }
 
@@ -179,73 +228,69 @@ class Player extends SpriteAnimationComponent
     // move left
     if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
         munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyA)) {
-      munchylaxInstance.player.position.x -= munchylaxInstance.speed; // left
-      if (scale.x < 0) scale.x = 1; // mirror left
-      isMoving = true;
-      if (!isFrontFlipping) {
-        // only change when not frontflipping yet, every frontflip must be finished
-        changeFlipAround = true;
-      }
-
-      // change animation
-      if (!isJumping) {
-        animation = walkAnimation;
-      }
-
-      // dust
-      if (!isJumping) {
-        spawnDustTrail(
-          Vector2(position.x + 30, position.y + (size.y / 2) - 20),
-        );
+      if (!playerStateManager.activeStates.contains(
+        PlayerStateType.isRunningLeft,
+      )) {
+        playerStateManager.addState(PlayerStateType.isRunningLeft, gameRef);
       }
     }
-
     // move right
     if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
         munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyD)) {
-      munchylaxInstance.player.position.x += munchylaxInstance.speed; // right
-      if (scale.x > 0) scale.x = -1; // mirror right
-      isMoving = true;
-      if (!isFrontFlipping) {
-        // only change when not frontflipping yet, every frontflip must be finished
-        changeFlipAround = false;
-      }
-
-      // change animation
-      if (!isJumping) {
-        animation = walkAnimation;
-      }
-
-      // dust
-      if (!isJumping) {
-        spawnDustTrail(
-          Vector2(position.x - 30, position.y + (size.y / 2) - 20),
-        );
+      if (!playerStateManager.activeStates.contains(
+        PlayerStateType.isRunningRight,
+      )) {
+        playerStateManager.addState(PlayerStateType.isRunningRight, gameRef);
       }
     }
-
     // jump
     if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.space) ||
         munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyW) ||
         munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
-      jump();
+      if (!playerStateManager.activeStates.contains(
+        PlayerStateType.isJumping,
+      )) {
+        playerStateManager.addState(PlayerStateType.isJumping, gameRef);
+      }
     }
-
     // down
     if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyS) ||
         munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowDown)) {
-      down = true;
+      if (!playerStateManager.activeStates.contains(
+        PlayerStateType.isGoingDown,
+      )) {
+        playerStateManager.addState(PlayerStateType.isGoingDown, gameRef);
+      }
     } else {
-      down = false;
+      if (playerStateManager.activeStates.contains(
+        PlayerStateType.isGoingDown,
+      )) {
+        playerStateManager.removeState(PlayerStateType.isGoingDown, gameRef);
+      }
     }
-
     // frontflip
     if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.enter)) {
-      frontflip();
+      if (playerStateManager.activeStates.contains(PlayerStateType.isJumping)) {
+        //frontflip();
+        if (!playerStateManager.activeStates.contains(
+          PlayerStateType.isFrontFlipping,
+        )) {
+          playerStateManager.addState(PlayerStateType.isFrontFlipping, gameRef);
+        }
+      }
     }
+    // idle
+    //else {
+    //playerStateManager.addState(PlayerStateType.isIdle, gameRef);
+    //}
 
     // bobbing and dust effect when moving
-    if (isMoving) {
+    if (playerStateManager.activeStates.contains(
+          PlayerStateType.isRunningRight,
+        ) ||
+        playerStateManager.activeStates.contains(
+          PlayerStateType.isRunningLeft,
+        )) {
       timeElapsed += dt * bobbingSpeed; // speed
       position.y += sin(timeElapsed) * bobbingHeight;
     } else {
@@ -298,7 +343,9 @@ class Player extends SpriteAnimationComponent
     }
 
     if (other is Bonus) {
-      if (isFrontFlipping) {
+      if (playerStateManager.activeStates.contains(
+        PlayerStateType.isFrontFlipping,
+      )) {
         // 5 bonus points
         gameRef.hud.updateScore(5);
         other.removeFromParent();
@@ -351,27 +398,5 @@ class Player extends SpriteAnimationComponent
       ),
     );
     gameRef.add(dust);
-  }
-
-  // jump function
-  void jump() {
-    if (!isJumping) {
-      isJumping = true;
-      velocityY = jumpStrength;
-
-      // jump sound
-      jumpAudio.playSound();
-    }
-  }
-
-  // frontflip function
-  void frontflip() {
-    if (isJumping && !isFrontFlipping) {
-      isFrontFlipping = true;
-      rotationAngle = 0;
-
-      // flip sound
-      flipAudio.playSound();
-    }
   }
 }
