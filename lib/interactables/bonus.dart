@@ -1,8 +1,8 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/effects.dart';
-import 'dart:math';
 import 'package:my_flame_game/interactables/strategy.dart';
 
 class Bonus extends SpriteComponent with HasGameRef<Munchylax> {

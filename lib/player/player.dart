@@ -1,22 +1,21 @@
 import 'dart:ui';
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_flame_game/audio/audio.dart';
 import 'package:my_flame_game/bloc/app_bloc.dart';
 import 'package:my_flame_game/bloc/bloc_events.dart';
 import 'package:my_flame_game/interactables/bomb.dart';
 import 'package:my_flame_game/interactables/bonus.dart';
 import 'package:my_flame_game/game_class/munchylax.dart';
-import 'package:flutter/services.dart';
 import 'package:flame/collisions.dart';
 import 'package:my_flame_game/interactables/food.dart';
-import 'dart:math';
-
+import 'package:my_flame_game/player/physics.dart';
 import 'package:my_flame_game/player_states/player_state_manager.dart';
 
 enum PlayerStateType {
@@ -52,20 +51,13 @@ class Player extends SpriteAnimationComponent
   bool isRunning = false;
   bool isIdle = false;
 
-  // audio effects
-  late Audio eatingAudio;
-  late Audio explosionAudio;
-  late Audio flipAudio;
-  late Audio hitAudio;
-  late Audio jumpAudio;
-  late Audio beepAudio;
-  late Audio bonusAudio;
-
+  // instances
   late SpriteAnimationComponent playerAnimation;
   late Munchylax munchylaxInstance;
   late SpriteAnimation idleAnimation;
   late SpriteAnimation walkAnimation;
   late PlayerStateManager playerStateManager;
+  late Physics physics;
 
   // decorators for when taking damage
   final decoratorPlayerTrans = PaintDecorator.tint(
@@ -92,18 +84,22 @@ class Player extends SpriteAnimationComponent
     // decorator
     decorator.addLast(decoratorPlayerTrans);
 
+    // add physics
+    physics = Physics();
+    add(physics);
+
     // sprite animation setup
     size = Vector2(47.0 * 2.5, 60.0 * 2.5);
     await loadAnimations();
 
-    // audio instances
-    eatingAudio = Audio('eating.wav');
-    explosionAudio = Audio('explosion.wav');
-    jumpAudio = Audio('jump.wav');
-    flipAudio = Audio('flip.wav');
-    beepAudio = Audio('beep.wav');
-    bonusAudio = Audio('eating.wav');
-    hitAudio = Audio('hit.mp3');
+    // preload audio to avoid lag
+    await FlameAudio.audioCache.load('eating.wav');
+    await FlameAudio.audioCache.load('explosion.wav');
+    await FlameAudio.audioCache.load('jump.wav');
+    await FlameAudio.audioCache.load('flip.wav');
+    await FlameAudio.audioCache.load('beep.wav');
+    await FlameAudio.audioCache.load('eating.wav');
+    await FlameAudio.audioCache.load('hit.wav');
   }
 
   // player animation
@@ -147,163 +143,8 @@ class Player extends SpriteAnimationComponent
     playerStateManager.removeState(PlayerStateType.isRunningLeft, gameRef);
     playerStateManager.removeState(PlayerStateType.isRunningRight, gameRef);
 
-    // jump physics
-    if (playerStateManager.activeStates.contains(PlayerStateType.isJumping)) {
-      // change to idle
-      animation = idleAnimation;
-
-      // apply gravity
-      if (playerStateManager.activeStates.contains(
-        PlayerStateType.isGoingDown,
-      )) {
-        velocityY += gravity * dt * 2;
-      } else {
-        velocityY += gravity * dt;
-      }
-
-      // update vertical position
-      position.y += velocityY * dt;
-
-      // prevent the player from falling through the ground
-      if (position.y >= gameRef.size.y - (playerHeight / 2)) {
-        position.y = gameRef.size.y - (playerHeight / 2); // reset to ground
-        velocityY = 0; // stop downward velocity
-
-        // remove states from list
-        playerStateManager.removeState(PlayerStateType.isJumping, gameRef);
-        if (playerStateManager.activeStates.contains(
-          PlayerStateType.isGoingDown,
-        )) {
-          playerStateManager.removeState(PlayerStateType.isGoingDown, gameRef);
-        }
-      }
-    }
-
-    // frontflip physics
-    if (playerStateManager.activeStates.contains(
-      PlayerStateType.isFrontFlipping,
-    )) {
-      if (changeFlipAround) {
-        // when moving left
-        rotationAngle -= rotationSpeed * dt; // 360-degree frontflip over time
-
-        // limit rotation to one full frontflip
-        if (rotationAngle <= -2 * pi) {
-          rotationAngle = 0;
-
-          // remove states from list
-          if (playerStateManager.activeStates.contains(
-            PlayerStateType.isFrontFlipping,
-          )) {
-            playerStateManager.removeState(
-              PlayerStateType.isFrontFlipping,
-              gameRef,
-            );
-          }
-        }
-      } else {
-        // when moving right
-        rotationAngle += rotationSpeed * dt; // 360-degree frontflip over time
-
-        // limit rotation to one full frontflip
-        if (rotationAngle >= 2 * pi) {
-          rotationAngle = 0;
-
-          // remove states from list
-          if (playerStateManager.activeStates.contains(
-            PlayerStateType.isFrontFlipping,
-          )) {
-            playerStateManager.removeState(
-              PlayerStateType.isFrontFlipping,
-              gameRef,
-            );
-          }
-        }
-      }
-
-      // apply rotation to the player (around the center)
-      angle = rotationAngle;
-    }
-
-    // move left
-    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
-        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyA)) {
-      if (!playerStateManager.activeStates.contains(
-        PlayerStateType.isRunningLeft,
-      )) {
-        playerStateManager.addState(PlayerStateType.isRunningLeft, gameRef);
-      }
-    }
-    // move right
-    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
-        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyD)) {
-      if (!playerStateManager.activeStates.contains(
-        PlayerStateType.isRunningRight,
-      )) {
-        playerStateManager.addState(PlayerStateType.isRunningRight, gameRef);
-      }
-    }
-    // jump
-    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.space) ||
-        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyW) ||
-        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
-      if (!playerStateManager.activeStates.contains(
-        PlayerStateType.isJumping,
-      )) {
-        playerStateManager.addState(PlayerStateType.isJumping, gameRef);
-      }
-    }
-    // down
-    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.keyS) ||
-        munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.arrowDown)) {
-      if (!playerStateManager.activeStates.contains(
-        PlayerStateType.isGoingDown,
-      )) {
-        playerStateManager.addState(PlayerStateType.isGoingDown, gameRef);
-      }
-    } else {
-      if (playerStateManager.activeStates.contains(
-        PlayerStateType.isGoingDown,
-      )) {
-        playerStateManager.removeState(PlayerStateType.isGoingDown, gameRef);
-      }
-    }
-    // frontflip
-    if (munchylaxInstance.keysPressed.contains(LogicalKeyboardKey.enter)) {
-      if (playerStateManager.activeStates.contains(PlayerStateType.isJumping)) {
-        //frontflip();
-        if (!playerStateManager.activeStates.contains(
-          PlayerStateType.isFrontFlipping,
-        )) {
-          playerStateManager.addState(PlayerStateType.isFrontFlipping, gameRef);
-        }
-      }
-    }
-    // idle
-    //else {
-    //playerStateManager.addState(PlayerStateType.isIdle, gameRef);
-    //}
-
-    // bobbing and dust effect when moving
-    if (playerStateManager.activeStates.contains(
-          PlayerStateType.isRunningRight,
-        ) ||
-        playerStateManager.activeStates.contains(
-          PlayerStateType.isRunningLeft,
-        )) {
-      timeElapsed += dt * bobbingSpeed; // speed
-      position.y += sin(timeElapsed) * bobbingHeight;
-    } else {
-      animation = idleAnimation;
-    }
-
-    // warp to the other side
-    if (position.x > gameRef.size.x) {
-      position.x = 0;
-    }
-    if (position.x < 0) {
-      position.x = gameRef.size.x;
-    }
+    // physics
+    physics.playerPhysics(dt);
   }
 
   @override
@@ -331,7 +172,7 @@ class Player extends SpriteAnimationComponent
       other.removeFromParent();
 
       // eat sound
-      eatingAudio.playSound();
+      FlameAudio.play('eating.wav');
     }
 
     if (other is Bomb) {
@@ -339,7 +180,7 @@ class Player extends SpriteAnimationComponent
       gameRef.context.read<AppBloc>().add(GoToMenu());
 
       // explosion sound
-      explosionAudio.playSound();
+      FlameAudio.play('explosion.wav');
     }
 
     if (other is Bonus) {
@@ -352,10 +193,10 @@ class Player extends SpriteAnimationComponent
         gameRef.poolManager.releaseBonus(other); // return to the pool
 
         // eat sound
-        bonusAudio.playSound();
+        FlameAudio.play('eating.wav');
       } else {
         // beep sound
-        beepAudio.playSound();
+        FlameAudio.play('beep.wav');
       }
     }
   }

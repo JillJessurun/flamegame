@@ -7,14 +7,14 @@ import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame/text.dart';
 
-class HUD extends PositionComponent with HasGameRef<Munchylax> {
+class Hud extends PositionComponent with HasGameRef<Munchylax> {
   int score = 0;
   int health = 5; // 5 hearts for full health
 
   late TextComponent scoreText;
   late List<SpriteComponent> hearts;
 
-  HUD() {
+  Hud() {
     // textpaint to configure text appearance
     final textPaint = TextPaint(
       style: TextStyle(
@@ -79,7 +79,7 @@ class HUD extends PositionComponent with HasGameRef<Munchylax> {
       });
 
       hearts[health].removeFromParent(); // remove a heart
-      gameRef.player.hitAudio.playSound();
+      FlameAudio.play('hit.mp3');
     } else {
       // game over
       gameRef.context.read<AppBloc>().add(GoToMenu());

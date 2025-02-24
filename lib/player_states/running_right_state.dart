@@ -3,16 +3,12 @@ import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:my_flame_game/player/player.dart';
 import 'package:my_flame_game/player_states/player_state.dart';
 
-class RunningRightState extends PlayerState {
+class RunningRightState extends StatePlayer {
   @override
-  void enterState(Munchylax munchylax) {
-    // TODO: implement enterState
-  }
+  void enterState(Munchylax munchylax) {}
 
   @override
-  void exitState(Munchylax munchylax) {
-    // TODO: implement exitState
-  }
+  void exitState(Munchylax munchylax) {}
 
   @override
   void updateState(Munchylax munchylax) {

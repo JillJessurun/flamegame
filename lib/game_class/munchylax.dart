@@ -10,9 +10,9 @@ import 'package:flame/input.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/components.dart';
 import 'package:my_flame_game/interactables/food.dart';
-import 'package:my_flame_game/hud/HUD.dart';
+import 'package:my_flame_game/hud/Hud.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:my_flame_game/pool_manager.dart';
+import 'package:my_flame_game/pool/pool_manager.dart';
 
 class Munchylax extends FlameGame
     with KeyboardEvents, HasCollisionDetection, TapDetector {
@@ -40,7 +40,7 @@ class Munchylax extends FlameGame
   late Timer bonusTimer;
   late SpriteComponent background;
   late Player player;
-  late HUD hud;
+  late Hud hud;
   Set<LogicalKeyboardKey> keysPressed = {}; // track keys that are pressed
   late PoolManager poolManager;
 
@@ -84,7 +84,7 @@ class Munchylax extends FlameGame
     add(ground);
 
     // load HUD
-    hud = HUD();
+    hud = Hud();
     add(hud);
 
     // game explaining
@@ -115,7 +115,6 @@ class Munchylax extends FlameGame
       repeat: true,
       onTick: () {
         addSpeed += 3; // make food fall faster each time
-        //add(Food()); // new food
         poolManager.spawnFood();
       },
     );
@@ -126,7 +125,6 @@ class Munchylax extends FlameGame
       fallingBombAmount,
       repeat: true,
       onTick: () {
-        //add(Bomb()); // new bomb
         poolManager.spawnBomb();
       },
     );
