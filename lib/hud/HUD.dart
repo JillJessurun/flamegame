@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_flame_game/bloc/app_bloc.dart';
 import 'package:my_flame_game/bloc/bloc_events.dart';
 import 'package:my_flame_game/game_class/munchylax.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flame/text.dart';
 
 class Hud extends PositionComponent with HasGameRef<Munchylax> {
@@ -39,10 +38,6 @@ class Hud extends PositionComponent with HasGameRef<Munchylax> {
     super.onLoad();
 
     final heartSprite = await gameRef.loadSprite('heart.png');
-
-    // preload audio to avoid lag
-    await FlameAudio.audioCache.load('gameover.mp3');
-    await FlameAudio.audioCache.load('hit.mp3');
 
     // set up the heart sprites
     for (int i = 0; i < 5; i++) {
@@ -79,13 +74,15 @@ class Hud extends PositionComponent with HasGameRef<Munchylax> {
       });
 
       hearts[health].removeFromParent(); // remove a heart
-      FlameAudio.play('hit.mp3');
+
+      // hit sound effect
+      gameRef.player.audioHit.start();
     } else {
       // game over
       gameRef.context.read<AppBloc>().add(GoToMenu());
 
       // sound
-      FlameAudio.play('gameover.mp3', volume: 1);
+      gameRef.player.audioGameOver.start();
     }
   }
 }

@@ -59,6 +59,15 @@ class Player extends SpriteAnimationComponent
   late PlayerStateManager playerStateManager;
   late Physics physics;
 
+  // audiopools for the sound effects
+  late AudioPool audioEating;
+  late AudioPool audioJump;
+  late AudioPool audioExplosion;
+  late AudioPool audioBeep;
+  late AudioPool audioHit;
+  late AudioPool audioFlip;
+  late AudioPool audioGameOver;
+
   // decorators for when taking damage
   final decoratorPlayerTrans = PaintDecorator.tint(
     Color.fromARGB(0, 255, 60, 0),
@@ -92,14 +101,17 @@ class Player extends SpriteAnimationComponent
     size = Vector2(47.0 * 2.5, 60.0 * 2.5);
     await loadAnimations();
 
-    // preload audio to avoid lag
-    await FlameAudio.audioCache.load('eating.wav');
-    await FlameAudio.audioCache.load('explosion.wav');
-    await FlameAudio.audioCache.load('jump.wav');
-    await FlameAudio.audioCache.load('flip.wav');
-    await FlameAudio.audioCache.load('beep.wav');
-    await FlameAudio.audioCache.load('eating.wav');
-    await FlameAudio.audioCache.load('hit.wav');
+    // audiopools
+    audioEating = await FlameAudio.createPool('eating.wav', maxPlayers: 5);
+    audioJump = await FlameAudio.createPool('jump.wav', maxPlayers: 5);
+    audioExplosion = await FlameAudio.createPool(
+      'explosion.wav',
+      maxPlayers: 5,
+    );
+    audioHit = await FlameAudio.createPool('hit.mp3', maxPlayers: 5);
+    audioBeep = await FlameAudio.createPool('beep.wav', maxPlayers: 5);
+    audioFlip = await FlameAudio.createPool('flip.wav', maxPlayers: 5);
+    audioGameOver = await FlameAudio.createPool('gameover.mp3', maxPlayers: 5);
   }
 
   // player animation
@@ -172,7 +184,7 @@ class Player extends SpriteAnimationComponent
       other.removeFromParent();
 
       // eat sound
-      FlameAudio.play('eating.wav');
+      audioEating.start();
     }
 
     if (other is Bomb) {
@@ -180,7 +192,7 @@ class Player extends SpriteAnimationComponent
       gameRef.context.read<AppBloc>().add(GoToMenu());
 
       // explosion sound
-      FlameAudio.play('explosion.wav');
+      audioExplosion.start();
     }
 
     if (other is Bonus) {
@@ -193,10 +205,10 @@ class Player extends SpriteAnimationComponent
         gameRef.poolManager.releaseBonus(other); // return to the pool
 
         // eat sound
-        FlameAudio.play('eating.wav');
+        audioEating.start();
       } else {
         // beep sound
-        FlameAudio.play('beep.wav');
+        audioBeep.start();
       }
     }
   }
