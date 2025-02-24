@@ -63,7 +63,14 @@ class MenuPage extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.play_arrow),
+                child: const Text(
+                  'Go!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'pokemon',
+                    letterSpacing: 5.0,
+                  ),
+                ),
               ),
             ),
           ),

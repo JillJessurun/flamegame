@@ -34,7 +34,7 @@ class _GamePageState extends State<GamePage> {
             child: Align(
               alignment: Alignment.topRight,
               child: SizedBox(
-                width: 50,
+                width: 80,
                 height: 50,
                 child: FloatingActionButton(
                   onPressed: () {
@@ -45,7 +45,14 @@ class _GamePageState extends State<GamePage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.home),
+                  child: const Text(
+                    'HOME',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontFamily: 'pokemon',
+                      letterSpacing: 5.0,
+                    ),
+                  ),
                 ),
               ),
             ),
