@@ -48,6 +48,15 @@ class Bonus extends SpriteComponent with HasGameRef<Munchylax> {
     add(CircleHitbox());
   }
 
+  /// reset method to reuse the object
+  void reset() {
+    position = Vector2(
+      _random.nextDouble() * gameRef.size.x - foodSize,
+      -foodSize,
+    );
+    size = Vector2(foodSize, foodSize);
+  }
+
   @override
   void update(double dt) {
     super.update(dt);

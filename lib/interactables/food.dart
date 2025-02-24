@@ -2,7 +2,6 @@ import 'package:flame/components.dart';
 import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flame/collisions.dart';
 import 'dart:math';
-
 import 'package:my_flame_game/interactables/strategy.dart';
 
 class Food extends SpriteComponent with HasGameRef<Munchylax> {
@@ -42,6 +41,16 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
     add(CircleHitbox());
   }
 
+  /// reset properties instead of creating a new object
+  void reset() {
+    position = Vector2(
+      _random.nextDouble() * gameRef.size.x - foodSize,
+      -foodSize,
+    );
+
+    size = Vector2(foodSize, foodSize);
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -59,6 +68,7 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
 
       // remove food
       removeFromParent();
+      gameRef.poolManager.releaseFood(this); // Return to the pool
     }
   }
 }

@@ -45,6 +45,15 @@ class Bomb extends SpriteComponent with HasGameRef<Munchylax> {
     add(CircleHitbox());
   }
 
+  /// reset method to reuse the object
+  void reset() {
+    position = Vector2(
+      _random.nextDouble() * gameRef.size.x - bombSize,
+      -bombSize,
+    );
+    size = Vector2(bombSize, bombSize);
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -58,6 +67,7 @@ class Bomb extends SpriteComponent with HasGameRef<Munchylax> {
     // avoided bomb
     if (position.y > gameRef.size.y) {
       removeFromParent();
+      gameRef.poolManager.releaseBomb(this); // return to the pool
     }
   }
 }

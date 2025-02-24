@@ -349,6 +349,7 @@ class Player extends SpriteAnimationComponent
         // 5 bonus points
         gameRef.hud.updateScore(5);
         other.removeFromParent();
+        gameRef.poolManager.releaseBonus(other); // return to the pool
 
         // eat sound
         bonusAudio.playSound();

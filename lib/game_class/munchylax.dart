@@ -12,6 +12,7 @@ import 'package:flame/components.dart';
 import 'package:my_flame_game/interactables/food.dart';
 import 'package:my_flame_game/hud/HUD.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'package:my_flame_game/pool_manager.dart';
 
 class Munchylax extends FlameGame
     with KeyboardEvents, HasCollisionDetection, TapDetector {
@@ -41,6 +42,7 @@ class Munchylax extends FlameGame
   late Player player;
   late HUD hud;
   Set<LogicalKeyboardKey> keysPressed = {}; // track keys that are pressed
+  late PoolManager poolManager;
 
   Munchylax(this.context);
 
@@ -59,6 +61,18 @@ class Munchylax extends FlameGame
           ..position = Vector2.zero();
 
     add(background);
+
+    // create poolmanager
+    poolManager = PoolManager();
+    add(poolManager);
+
+    // preload pools
+    for (int i = 0; i < 10; i++) {
+      poolManager.foodPool.add(Food());
+    }
+    for (int i = 0; i < 5; i++) {
+      poolManager.bombPool.add(Bomb());
+    }
 
     // load ground
     RectangleComponent ground = RectangleComponent(
@@ -101,7 +115,8 @@ class Munchylax extends FlameGame
       repeat: true,
       onTick: () {
         addSpeed += 3; // make food fall faster each time
-        add(Food()); // new food
+        //add(Food()); // new food
+        poolManager.spawnFood();
       },
     );
     spawnTimer.start();
@@ -111,7 +126,8 @@ class Munchylax extends FlameGame
       fallingBombAmount,
       repeat: true,
       onTick: () {
-        add(Bomb()); // new bomb
+        //add(Bomb()); // new bomb
+        poolManager.spawnBomb();
       },
     );
     bombTimer.start();
@@ -162,6 +178,7 @@ class Munchylax extends FlameGame
       label.textRenderer = TextPaint(
         style: TextStyle(
           fontSize: 30,
+          // ignore: deprecated_member_use
           color: Colors.white.withOpacity(alpha),
           fontFamily: 'pokemon',
           letterSpacing: 3.0,
