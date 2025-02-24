@@ -3,14 +3,21 @@ import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/effects.dart';
 import 'dart:math';
+import 'package:my_flame_game/interactables/strategy.dart';
 
 class Bonus extends SpriteComponent with HasGameRef<Munchylax> {
   final double foodSize = 40;
   final double min = 140;
   final double max = 210;
   double spawnHeight = 0;
+  final double scaleSpeed = 0.4;
 
   static final Random _random = Random();
+  late AnimationStrategy animationStrategy;
+
+  Bonus() {
+    animationStrategy = PulsateAnimation(scaleSpeed);
+  }
 
   @override
   Future<void> onLoad() async {
@@ -39,5 +46,13 @@ class Bonus extends SpriteComponent with HasGameRef<Munchylax> {
 
     // collision hitbox
     add(CircleHitbox());
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    // animate bonus
+    animationStrategy.animate(this, dt);
   }
 }

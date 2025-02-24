@@ -3,16 +3,21 @@ import 'package:my_flame_game/game_class/munchylax.dart';
 import 'package:flame/collisions.dart';
 import 'dart:math';
 
+import 'package:my_flame_game/interactables/strategy.dart';
+
 class Food extends SpriteComponent with HasGameRef<Munchylax> {
   final double foodSize = 40;
   final double min = 140;
   final double max = 210;
   double fallSpeed = 10; // pixels per second
+  final double scaleSpeed = 0.5;
 
   static final Random _random = Random();
+  late AnimationStrategy animationStrategy;
 
   Food() {
     final random = Random();
+    animationStrategy = PulsateAnimation(scaleSpeed);
     fallSpeed = min + random.nextDouble() * (max - min);
   }
 
@@ -40,6 +45,9 @@ class Food extends SpriteComponent with HasGameRef<Munchylax> {
   @override
   void update(double dt) {
     super.update(dt);
+
+    // animate food
+    animationStrategy.animate(this, dt);
 
     // falling food
     position.y += fallSpeed * dt;
